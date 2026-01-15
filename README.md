@@ -9,14 +9,24 @@
 - 自动设置页面布局和单元格样式
 - 统一的文件命名规范
 - 自动创建excel目录存放生成的文件
+- 支持多资源管理，可通过命令行参数指定生成哪个资源
 
 ## 文件结构
 
 ```
 word/
-├── moxie.go          # 主程序入口，包含数据和生成逻辑
+├── main.go           # 主程序入口，处理命令行参数和基本流程
+├── filenametools/    # 文件名处理工具
+│   ├── filenametools.go # 文件名清理函数
+│   └── filenametools_test.go # 单元测试
+├── utils/
+│   ├── utils.go      # 工具函数，处理资源加载和数据转换
+│   └── utils_test.go # 单元测试
+├── resources/        # 资源目录，存储所有词汇数据
+│   └── 新概念青少版B.json  # 新概念青少版B词汇资源
 ├── tool/
 │   ├── generator.go  # Excel生成器核心实现
+│   ├── generator_test.go # 单元测试
 │   └── excel_generator.go  # Excel页面设置和格式化
 └── README.md         # 项目说明文档
 ```
@@ -32,20 +42,28 @@ go mod tidy
 
 ## 使用方法
 
-1. 在项目根目录运行程序：
+1. 在项目根目录运行程序，指定资源名称：
 
 ```bash
-go run moxie.go
+go run main.go "新概念青少版B"
 ```
 
-2. 程序会根据内置的单词数据自动生成Excel文件，文件会存放在`excel`目录中：
-   - 新概念-青少版B.xlsx（包含多个工作表，每表最多40个单词）
+2. 程序会根据指定的资源名称生成Excel文件，文件会存放在`excel`目录中
 
-## 配置数据
+## 添加新资源
 
-在[moxie.go](./moxie.go)文件中可以找到所有单词数据，已合并为一个[allWords](file:///Users/sugar/Desktop/stu/word/moxie.go#L33-L97)列表：
-- 程序会自动根据单词总数和每页最大40个单词的限制，计算并生成相应数量的工作表
-- 每个工作表会自动命名为"Page1", "Page2", 等等
+要添加新的资源，只需在`resources`目录中创建一个新的JSON文件，文件名即为资源名称，内容为单词数组：
+
+例如，创建`初中英语词汇.json`：
+```json
+[
+  {"pos": "n.", "text": "单词1"},
+  {"pos": "v.", "text": "动词1"},
+  ...
+]
+```
+
+程序会自动加载`resources`目录中的所有JSON文件，文件名（不含扩展名）作为资源名称。
 
 ## Excel表格格式
 
@@ -68,7 +86,7 @@ go run moxie.go
 
 程序采用模块化设计，可以轻松扩展：
 
-- 添加更多单词到[allWords](file:///Users/sugar/Desktop/stu/word/moxie.go#L33-L97)列表
+- 在resources目录中添加更多JSON资源文件
 - 修改样式设置
 - 调整页面布局
 - 更改文件命名规则
@@ -77,6 +95,7 @@ go run moxie.go
 
 - 语言: Go (Golang)
 - Excel处理: excelize/v2
+- 数据格式: JSON
 - 架构: 模块化设计，便于维护和扩展
 
 ## 注意事项
@@ -84,6 +103,7 @@ go run moxie.go
 - 程序会自动根据单词数量计算需要的工作表数量，每表最多40个单词
 - 确保安装了正确的依赖库
 - 生成的Excel文件会存放在`excel`目录中，会覆盖同名文件
+- 资源名称需要与JSON文件名（不含扩展名）完全匹配
 
 ## 许可证
 
