@@ -2,6 +2,8 @@ package tool
 
 import (
 	"fmt"
+	"math/rand"
+	"time"
 
 	"github.com/xuri/excelize/v2"
 )
@@ -246,36 +248,50 @@ func GenExerSheetWithNames(datasets [][]string, sheetNames []string, filename st
 	return f.SaveAs(filename)
 }
 
-// GenExerSheet 生成多个工作表的单词默写练习表（使用默认页面名称）
+// GenExerciseSheet 生成多个工作表的单词默写练习表（使用默认页面名称）
 // 参数: allWords - 包含所有单词的切片
 // 参数: filename - 输出Excel文件的名称
+// 参数: shuffle - 是否打乱单词顺序
 // 每个sheet最多包含40个单词，超出的部分会自动创建新sheet
-func GenExerSheet(allWords []string, filename string) error {
+func GenExerciseSheet(allWords []string, filename string, shuffle bool) error {
+	// 如果需要打乱顺序，复制并打乱单词列表
+	var wordsToUse []string
+	if shuffle {
+		wordsToUse = make([]string, len(allWords))
+		copy(wordsToUse, allWords)
+		rand.Seed(time.Now().UnixNano())
+		rand.Shuffle(len(wordsToUse), func(i, j int) {
+			wordsToUse[i], wordsToUse[j] = wordsToUse[j], wordsToUse[i]
+		})
+	} else {
+		wordsToUse = allWords
+	}
+
 	// 每个sheet最多包含40个单词
 	const maxWordsPerSheet = 40
-	
+
 	// 计算需要多少个工作表
-	numSheets := len(allWords) / maxWordsPerSheet
-	if len(allWords)%maxWordsPerSheet > 0 {
+	numSheets := len(wordsToUse) / maxWordsPerSheet
+	if len(wordsToUse)%maxWordsPerSheet > 0 {
 		numSheets++
 	}
-	
+
 	// 如果没有单词，至少创建一个空的工作表
 	if numSheets == 0 {
 		numSheets = 1
 	}
-	
+
 	// 将单词列表分割成多个数据集
 	datasets := make([][]string, numSheets)
 	for i := 0; i < numSheets; i++ {
 		start := i * maxWordsPerSheet
 		end := start + maxWordsPerSheet
-		if end > len(allWords) {
-			end = len(allWords)
+		if end > len(wordsToUse) {
+			end = len(wordsToUse)
 		}
-		datasets[i] = allWords[start:end]
+		datasets[i] = wordsToUse[start:end]
 	}
-	
+
 	// 生成默认的工作表名称 (Page1, Page2, ...)
 	sheetNames := make([]string, numSheets)
 	for i := range datasets {

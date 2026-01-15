@@ -5,9 +5,10 @@
 ## 功能特点
 
 - 根据词汇列表自动生成格式化的Excel默写练习表
-- 支持批量生成多个单元的练习表格
+- 支持批量生成多个工作表的练习表格（每表最多40个单词）
 - 自动设置页面布局和单元格样式
 - 统一的文件命名规范
+- 自动创建excel目录存放生成的文件
 
 ## 文件结构
 
@@ -37,22 +38,14 @@ go mod tidy
 go run moxie.go
 ```
 
-2. 程序会根据内置的数据集生成4个Excel文件：
-   - 新概念-青少版B-1.xlsx
-   - 新概念-青少版B-2.xlsx
-   - 新概念-青少版B-3.xlsx
-   - 新概念-青少版B-4.xlsx
+2. 程序会根据内置的单词数据自动生成Excel文件，文件会存放在`excel`目录中：
+   - 新概念-青少版B.xlsx（包含多个工作表，每表最多40个单词）
 
 ## 配置数据
 
-在[moxie.go](./moxie.go)文件中可以找到以下数据集：
-
-- `xgn_qsb_b_1`: 包含40个单词的第一组数据
-- `xgn_qsb_b_2`: 包含40个单词的第二组数据
-- `xgn_qsb_b_3`: 包含40个单词的第三组数据
-- `xgn_qsb_b_4`: 包含40个单词的第四组数据
-
-你可以根据需要修改这些数据集中的词汇。
+在[moxie.go](./moxie.go)文件中可以找到所有单词数据，已合并为一个[allWords](file:///Users/sugar/Desktop/stu/word/moxie.go#L33-L97)列表：
+- 程序会自动根据单词总数和每页最大40个单词的限制，计算并生成相应数量的工作表
+- 每个工作表会自动命名为"Page1", "Page2", 等等
 
 ## Excel表格格式
 
@@ -64,11 +57,18 @@ go run moxie.go
 - 特殊边框样式（虚线分隔）
 - A4纸张尺寸，适合打印
 
+## API说明
+
+工具包提供了两个函数：
+
+- `GenExerciseSheet(allWords []string, filename string, shuffle bool)` - 简化版函数，自动按每页40个单词分割数据并生成工作表，支持是否打乱顺序
+- `GenExerSheetWithNames(datasets [][]string, sheetNames []string, filename string)` - 完整版函数，支持自定义数据分割和工作表名称
+
 ## 扩展性
 
 程序采用模块化设计，可以轻松扩展：
 
-- 添加更多数据集
+- 添加更多单词到[allWords](file:///Users/sugar/Desktop/stu/word/moxie.go#L33-L97)列表
 - 修改样式设置
 - 调整页面布局
 - 更改文件命名规则
@@ -81,9 +81,9 @@ go run moxie.go
 
 ## 注意事项
 
-- 每个数据集必须包含恰好40个单词，否则程序会报错
+- 程序会自动根据单词数量计算需要的工作表数量，每表最多40个单词
 - 确保安装了正确的依赖库
-- 生成的Excel文件会覆盖同名文件
+- 生成的Excel文件会存放在`excel`目录中，会覆盖同名文件
 
 ## 许可证
 

@@ -162,7 +162,7 @@ func main() {
 
 	filename := filepath.Join(excelDir, "新概念-青少版B.xlsx")
 
-	if err := tool.GenExerSheet(allWordsList, filename); err != nil {
+	if err := tool.GenExerciseSheet(allWordsList, filename, false); err != nil {
 		fmt.Printf("生成Excel文件时发生错误: %v\n", err)
 	} else {
 		fmt.Printf("成功生成Excel文件: %s\n", filename)
