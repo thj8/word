@@ -16,18 +16,19 @@
 ```
 word/
 ├── main.go           # 主程序入口，处理命令行参数和基本流程
-├── filenametools/    # 文件名处理工具
-│   ├── filenametools.go # 文件名清理函数
-│   └── filenametools_test.go # 单元测试
 ├── utils/
 │   ├── utils.go      # 工具函数，处理资源加载和数据转换
-│   └── utils_test.go # 单元测试
+│   ├── utils_test.go # 单元测试
+│   ├── file.go       # 文件操作相关工具函数
+│   └── file_test.go  # 文件操作单元测试
 ├── resources/        # 资源目录，存储所有词汇数据
 │   └── 新概念青少版B.json  # 新概念青少版B词汇资源
 ├── tool/
 │   ├── generator.go  # Excel生成器核心实现
 │   ├── generator_test.go # 单元测试
 │   └── excel_generator.go  # Excel页面设置和格式化
+├── go.mod            # Go模块定义
+├── go.sum            # Go依赖校验和
 └── README.md         # 项目说明文档
 ```
 
@@ -36,7 +37,6 @@ word/
 本项目使用`github.com/xuri/excelize/v2`库来操作Excel文件，可以通过以下命令安装：
 
 ```bash
-go mod init word
 go mod tidy 
 ```
 
