@@ -12,11 +12,6 @@ func NewExcelGenerator() *ExcelGenerator {
 	return &ExcelGenerator{}
 }
 
-// GenerateWordExercise 生成单词默写练习表
-func (eg *ExcelGenerator) GenerateWordExercise(words []string, filename string) error {
-	return GenerateWordExercise(words, filename)
-}
-
 // SetPageSize 设置页面尺寸
 func (eg *ExcelGenerator) SetPageSize(f *excelize.File, sheet string) {
 	// 设置为A4纸张大小

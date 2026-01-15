@@ -2,12 +2,25 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"word/tool"
 )
 
 func main() {
-	xgn_qsb_b_1 := []string{
+	// 创建excel目录
+	excelDir := "excel"
+	if _, err := os.Stat(excelDir); os.IsNotExist(err) {
+		err := os.Mkdir(excelDir, 0755)
+		if err != nil {
+			fmt.Printf("创建目录失败: %v\n", err)
+			return
+		}
+	}
+
+	// 合并所有单词到一个列表中
+	allWords := []string{
 		"n.祖父",
 		"n.祖母",
 		"n.父亲",
@@ -41,15 +54,13 @@ func main() {
 		"n.早餐",
 		"n.午餐",
 		"n.晚饭",
-		"n.十一",
+		"num.十一",
 		"num.十二",
 		"n.船",
 		"n.游戏用具",
 		"n.手偶",
 		"n.拼图游戏",
 		"n.滑板",
-	}
-	xgn_qsb_b_2 := []string{
 		"n.跳绳",
 		"n.宇宙飞船",
 		"n.足球",
@@ -59,7 +70,7 @@ func main() {
 		"n.驴",
 		"n.鸭子",
 		"n.农场",
-		"n.山羊",
+		"n.山 goat",
 		"n.马",
 		"n.羊羔",
 		"n.绵羊",
@@ -90,9 +101,6 @@ func main() {
 		"adj.脏的",
 		"adj.干的",
 		"adj.湿的",
-	}
-
-	xgn_qsb_b_3 := []string{
 		"adj.高兴的",
 		"adj.不高兴的",
 		"adj.饿的",
@@ -133,8 +141,6 @@ func main() {
 		"n.水",
 		"v.喊",
 		"v.唱歌",
-	}
-	xgn_qsb_b_4 := []string{
 		"n.歌曲",
 		"v.扔",
 		"v.画画",
@@ -151,15 +157,14 @@ func main() {
 		"v.触碰",
 	}
 
-	// 定义数据集和对应的文件名
-	dataSets := [][]string{xgn_qsb_b_1, xgn_qsb_b_2, xgn_qsb_b_3, xgn_qsb_b_4}
+	// 定义数据集
+	allWordsList := allWords
 
-	for i, dataSet := range dataSets {
-		filename := fmt.Sprintf("新概念-青少版B-%d.xlsx", i+1)
-		if err := tool.GenerateWordExercise(dataSet, filename); err != nil {
-			fmt.Printf("生成Excel文件%d时发生错误: %v\n", i+1, err)
-		} else {
-			fmt.Printf("成功生成Excel文件: %s\n", filename)
-		}
+	filename := filepath.Join(excelDir, "新概念-青少版B.xlsx")
+
+	if err := tool.GenExerSheet(allWordsList, filename); err != nil {
+		fmt.Printf("生成Excel文件时发生错误: %v\n", err)
+	} else {
+		fmt.Printf("成功生成Excel文件: %s\n", filename)
 	}
 }
