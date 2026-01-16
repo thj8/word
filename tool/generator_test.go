@@ -67,45 +67,18 @@ func TestGenExerciseSheetEmpty(t *testing.T) {
 	
 	// 测试空列表的情况
 	err := GenExerciseSheet(words, tempFile, false)
-	if err != nil {
-		t.Errorf("GenExerciseSheet() with empty list 函数执行失败: %v", err)
+	if err == nil {
+		t.Error("GenExerciseSheet() with empty list 应该返回错误")
 	}
 	
-	// 检查文件是否创建成功
-	if _, err := os.Stat(tempFile); os.IsNotExist(err) {
-		t.Error("GenExerciseSheet() with empty list 未生成输出文件")
+	// 检查文件是否没有创建
+	if _, err := os.Stat(tempFile); err == nil {
+		t.Error("GenExerciseSheet() with empty list 不应该生成输出文件")
+		os.Remove(tempFile)
 	}
-	
-	// 清理临时文件
-	os.Remove(tempFile)
 }
 
-func TestGenExerciseSheetWithNames(t *testing.T) {
-	// 创建一个临时的单词列表
-	words := [][]string{
-		{"n.测试单词1", "v.测试单词2"},
-		{"adj.测试单词3", "adv.测试单词4"},
-	}
-	
-	sheetNames := []string{"Sheet1", "Sheet2"}
 
-	// 生成临时文件
-	tempFile := "temp_test_withnames.xlsx"
-	
-	// 测试正常情况
-	err := GenExerSheetWithNames(words, sheetNames, tempFile)
-	if err != nil {
-		t.Errorf("GenExerSheetWithNames() 函数执行失败: %v", err)
-	}
-	
-	// 检查文件是否创建成功
-	if _, err := os.Stat(tempFile); os.IsNotExist(err) {
-		t.Error("GenExerSheetWithNames() 未生成输出文件")
-	}
-	
-	// 清理临时文件
-	os.Remove(tempFile)
-}
 
 func TestGenExerciseSheetWithLargeDataset(t *testing.T) {
 	// 创建一个较大的数据集，超过40个单词，以测试分页功能
@@ -172,12 +145,43 @@ func TestGenExerciseSheetWithShuffleCompare(t *testing.T) {
 	os.Remove(tempFileShuffled)
 }
 
+func TestGenExerciseSheetWithOptions(t *testing.T) {
+	// 创建一个临时的单词列表
+	words := []string{
+		"n.测试单词1",
+		"v.测试单词2",
+		"adj.测试单词3",
+	}
+
+	// 生成临时文件
+	tempFile := "temp_test_options.xlsx"
+	
+	// 测试带选项的生成函数
+	opts := GenerateOptions{
+		ShowPos:   true,
+		WordCount: -1,
+		Shuffle:   false,
+	}
+	err := GenerateExerciseSheet(words, tempFile, opts)
+	if err != nil {
+		t.Errorf("GenExerciseSheetWithOptions() 函数执行失败: %v", err)
+	}
+	
+	// 检查文件是否创建成功
+	if _, err := os.Stat(tempFile); os.IsNotExist(err) {
+		t.Error("GenExerciseSheetWithOptions() 未生成输出文件")
+	}
+	
+	// 清理临时文件
+	os.Remove(tempFile)
+}
+
 func TestGenExerciseSheetSingleWord(t *testing.T) {
-	// 测试只有一个单词的情况
+	// 创建一个单词的列表
 	words := []string{"n.单个测试单词"}
 
 	// 生成临时文件
-	tempFile := "temp_single_word.xlsx"
+	tempFile := "temp_test_single.xlsx"
 	
 	// 测试单个单词的情况
 	err := GenExerciseSheet(words, tempFile, false)
