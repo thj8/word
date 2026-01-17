@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
 	"word/tool"
 	"word/utils"
 )
@@ -70,7 +71,7 @@ func main() {
 	// 创建excel目录
 	excelDir := "excel"
 	if _, err := os.Stat(excelDir); os.IsNotExist(err) {
-		err := os.Mkdir(excelDir, 0755)
+		err := os.Mkdir(excelDir, 0o755)
 		if err != nil {
 			fmt.Printf("创建目录失败: %v\n", err)
 			return
