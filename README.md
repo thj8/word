@@ -1,117 +1,148 @@
 # 单词默写练习Excel生成器
 
-这是一个用于生成新概念青少版B系列单词默写练习表格的Go程序，可以将词汇数据导出为格式化的Excel文件，方便教师和学生使用。
+这是一个用于生成单词默写练习表格的Go库，可以将词汇数据导出为格式化的Excel文件，方便教师和学生使用。
 
-## 功能特点
+## 安装
 
-- 根据词汇列表自动生成格式化的Excel默写练习表
-- 支持批量生成多个工作表的练习表格（每表最多40个单词）
-- 自动设置页面布局和单元格样式
-- 统一的文件命名规范
-- 自动创建excel目录存放生成的文件
-- 支持多资源管理，可通过命令行参数指定生成哪个资源
-- 支持多种命令行选项，包括是否显示词性、输出单词数量和随机排序
+```bash
+go get github.com/thj8/word
+```
+
+## 作为库使用
+
+### 基本使用
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/thj8/word/lib"
+)
+
+func main() {
+	// 显示可用资源
+	availableResources := lib.GetAvailableResources()
+	fmt.Println("Available resources:")
+	for _, resource := range availableResources {
+		fmt.Printf("  - %s\n", resource)
+	}
+
+	// 生成练习表
+	err := lib.GenerateExerciseSheet("新概念青少版B", true, 10, false)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Excel file generated successfully!")
+}
+```
+
+### API参考
+
+#### 函数
+
+- `lib.GenerateExerciseSheet(resourceName string, showPos bool, wordCount int, shuffle bool) error`
+  - 根据指定的资源生成Excel练习表
+  - `resourceName`: 资源名称（如"新概念青少版B"）
+  - `showPos`: 是否显示词性
+  - `wordCount`: 输出单词数量（-1表示全部）
+  - `shuffle`: 是否随机排序
+  - 返回错误信息
+
+- `lib.GetAvailableResources() []string`
+  - 获取所有可用的资源名称列表
+  - 返回字符串切片
+
+## 作为命令行工具使用
+
+如果想直接使用命令行工具：
+
+```bash
+go run main.go -resource "新概念青少版B" -show-pos=true -count=10 -shuffle=false
+```
 
 ## 文件结构
 
 ```
 word/
-├── main.go           # 主程序入口，处理命令行参数和基本流程
-├── utils/
-│   ├── utils.go      # 工具函数，处理资源加载和数据转换
-│   ├── utils_test.go # 单元测试
-│   ├── file.go       # 文件操作相关工具函数
-│   └── file_test.go  # 文件操作单元测试
-├── resources/        # 资源目录，存储所有词汇数据
-│   ├── 新概念青少版B.json  # 新概念青少版B词汇资源
-│   ├── 译林三上.json     # 译林版三年级上册词汇资源
-│   └── 新概念青少版A.json  # 新概念青少版A词汇资源
+├── main.go           # 命令行工具入口
+├── lib/
+│   └── lib.go        # 可导入的库
 ├── tool/
 │   ├── generator.go  # Excel生成器核心实现
 │   ├── generator_test.go # 单元测试
 │   └── excel_generator.go  # Excel页面设置和格式化
-├── go.mod            # Go模块定义
-├── go.sum            # Go依赖校验和
-└── README.md         # 项目说明文档
+├── utils/
+│   ├── utils.go      # 工具函数，处理资源加载和数据转换
+│   ├── utils_test.go # 单元测试
+│   ├── file.go       # 文件操作相关工具函数
+│   └── file_test.go  # 文件操作単元测试
+├── resources/        # 词汇资源文件
+│   ├── 新概念青少版B.json
+│   ├── 译林三上.json
+│   └── 新概念青少版A.json
+├── go.mod
+├── go.sum
+└── README.md
 ```
 
-## 安装依赖
+## lib 文件夹说明
 
-本项目使用`github.com/xuri/excelize/v2`库来操作Excel文件，可以通过以下命令安装：
+lib 文件夹包含库的公共接口，使得这个项目可以作为库被其他项目导入使用：
 
-```bash
-go mod tidy 
-```
+- **公共接口封装**：提供简单易用的 API，如 [GenerateExerciseSheet](file:///Users/sugar/Desktop/stu/word/lib/lib.go#L11-L43) 和 [GetAvailableResources](file:///Users/sugar/Desktop/stu/word/lib/lib.go#L46-L53)
+- **内部实现隐藏**：隐藏复杂的内部逻辑，只暴露必要的功能给使用者
+- **库与工具分离**：允许同一套代码既可以作为命令行工具使用，也可以作为库导入到其他项目中
 
-## 使用方法
+## 贡献更多资源
 
-1. 在项目根目录运行程序，使用命令行参数：
+我们欢迎社区贡献更多的词汇资源！如果您有以下类型的词汇资源，欢迎提交 PR：
 
-```bash
-# 基本用法
-go run main.go -resource "新概念青少版B"
+- **英语教材词汇**：如剑桥英语、牛津英语、人教版英语等
+- **其他语言词汇**：如法语、德语、日语、韩语等
+- **专业词汇**：如医学英语、计算机英语、商务英语等
+- **分级词汇**：如小学、初中、高中、大学四级、六级等
 
-# 显示所有选项的帮助
-go run main.go -help
+### 如何贡献
 
-# 显示词性，输出20个单词，不打乱顺序
-go run main.go -resource "新概念青少版B" -show-pos=true -count=20 -shuffle=false
-
-# 不显示词性，输出10个单词，打乱顺序
-go run main.go -resource "新概念青少版B" -show-pos=false -count=10 -shuffle=true
-```
-
-2. 程序会根据指定的资源名称生成Excel文件，文件会存放在`excel`目录中
-
-## 命令行选项
-
-- `-resource`: 指定资源名称（必填）
-- `-show-pos`: 是否显示词性（默认true）
-- `-count`: 输出单词个数（默认-1表示全部）
-- `-shuffle`: 是否随机乱序（默认false）
-- `-help`: 显示帮助信息
-
-## 添加新资源
-
-要添加新的资源，只需在`resources`目录中创建一个新的JSON文件，文件名即为资源名称，内容为单词数组：
-
-例如，创建`初中英语词汇.json`：
+1. Fork 本仓库
+2. 在 `resources/` 目录下添加您的 JSON 文件
+3. 按照以下格式准备您的词汇数据：
 ```json
 [
-  {"pos": "n.", "text": "单词1"},
-  {"pos": "v.", "text": "动词1"},
-  ...
+  {"pos": "n.", "text": "苹果"},
+  {"pos": "v.", "text": "跑"},
+  {"pos": "adj.", "text": "美丽的"}
 ]
 ```
 
-程序会自动加载`resources`目录中的所有JSON文件，文件名（不含扩展名）作为资源名称。
+4. 提交 Pull Request
 
-### JSON格式规范
+我们非常感谢您的贡献！
 
-资源文件必须遵循以下格式规范：
+## 资源文件格式
 
-- 文件必须是有效的JSON格式
-- 文件内容是一个数组，包含多个词汇对象
-- 每个词汇对象必须包含以下字段：
-  - `pos`: 词性（part of speech），如 "n."（名词）、"v."（动词）等
-  - `text`: 词汇的具体含义或中文释义
+资源文件必须是JSON格式，包含单词数组：
+```json
+[
+  {"pos": "n.", "text": "苹果"},
+  {"pos": "v.", "text": "跑"},
+  {"pos": "adj.", "text": "美丽的"}
+]
+```
 
-### 词性（POS）属性详解
+## 功能特点
 
-| 词性缩写 | 说明 | 示例 |
-|---------|------|------|
-| `n.` | 名词 (noun)：表示人、事物、地点或抽象概念的名称 | 学生、桌子、北京 |
-| `v.` | 动词 (verb)：表示动作或状态 | 跑、学习、是 |
-| `adj.` | 形容词 (adjective)：修饰名词或代词，描述人或事物的特征 | 美丽的、高的、聪明的 |
-| `adv.` | 副词 (adverb)：修饰动词、形容词或其他副词 | 快速地、非常、很 |
-| `pron.` | 代词 (pronoun)：代替名词或名词短语 | 我、你、他们 |
-| `prep.` | 介词 (preposition)：表示名词或代词与其他词的关系 | 在、关于、为了 |
-| `conj.` | 连词 (conjunction)：连接词、短语或句子 | 和、但是、或者 |
-| `int.` | 感叹词 (interjection)：表达情感或感叹 | 哎呀、哦、哈哈 |
-| `det.` | 限定词 (determiner)：限定名词的意义范围 | 这、那、一些 |
-| `phr.` | 短语 (phrase)：固定搭配或常用语句 | 早上好、生日快乐 |
-| `art.` | 冠词 (article)：用在名词前帮助说明名词的含义 | 一个、这个 |
-| `num.` | 数词 (numeral)：表示数量或顺序 | 一、第一、许多 |
+- 根据词汇列表自动生成格式化的Excel默写练习表
+- 支持批量生成多个工作表的练习表格（每表最多40个单词）
+- 自动设置页面布局和単元格样式
+- 统一的文件命名规范
+- 自动创建excel目录存放生成的文件
+- 支持多资源管理
+- 支持多种命令行选项，包括是否显示词性、输出单词数量和随机排序
 
 ## Excel表格格式
 
@@ -122,16 +153,6 @@ go run main.go -resource "新概念青少版B" -show-pos=false -count=10 -shuffl
 - 每个单词占用3行空间，便于书写
 - 特殊边框样式（虚线分隔）
 - A4纸张尺寸，适合打印
-
-## API说明
-
-工具包提供了以下主要函数和结构体：
-
-- `ExerciseGenerator` - 练习表生成器结构体，封装了所有生成逻辑
-  - `NewExerciseGenerator(resourceName string, opts GenerateOptions, originalWords []string) *ExerciseGenerator` - 创建新的练习表生成器
-  - `Generate(filename string) error` - 根据指定文件名生成练习表
-  - `GenerateAuto() error` - 自动根据资源名称生成练习表
-- `GenExerciseSheet(resourceName string, allWords []string, filename string, shuffle bool) error` - 简化版函数（保持向后兼容），默认显示词性且输出全部单词，支持是否打乱顺序
 
 ## 扩展性
 
@@ -148,13 +169,6 @@ go run main.go -resource "新概念青少版B" -show-pos=false -count=10 -shuffl
 - Excel处理: excelize/v2
 - 数据格式: JSON
 - 架构: 模块化设计，便于维护和扩展
-
-## 注意事项
-
-- 程序会自动根据单词数量计算需要的工作表数量，每表最多40个单词
-- 确保安装了正确的依赖库
-- 生成的Excel文件会存放在`excel`目录中，会覆盖同名文件
-- 资源名称需要与JSON文件名（不含扩展名）完全匹配
 
 ## 许可证
 

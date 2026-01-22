@@ -3,10 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
 
-	"word/tool"
-	"word/utils"
+	"github.com/thj8/word/lib"
+	"github.com/thj8/word/utils"
 )
 
 func main() {
@@ -37,40 +36,11 @@ func main() {
 
 	resourceNameValue := *resourceName
 
-	// 加载资源
-	resources := utils.LoadAllResources()
-
-	// 检查请求的资源是否存在
-	words, exists := resources[resourceNameValue]
-	if !exists {
-		fmt.Printf("错误: 找不到资源 '%s'\n", resourceNameValue)
-		fmt.Println("可用资源:")
-		for resourceName := range resources {
-			fmt.Printf("  - %s\n", resourceName)
-		}
-		return
-	}
-
-	// 创建excel目录
-	excelDir := "excel"
-	if _, err := os.Stat(excelDir); os.IsNotExist(err) {
-		err := os.Mkdir(excelDir, 0o755)
-		if err != nil {
-			fmt.Printf("创建目录失败: %v\n", err)
-			return
-		}
-	}
-
-	opts := tool.GenerateOptions{
-		ShowPos:   *showPos,
-		WordCount: *wordCount,
-		Shuffle:   *shuffle,
-	}
-	generator := tool.NewExerciseGenerator(resourceNameValue, opts, words)
-	filename := generator.GenerateFilename()
-	if err := generator.GenerateAuto(); err != nil {
+	// 生成练习表
+	err := lib.GenerateExerciseSheet(resourceNameValue, *showPos, *wordCount, *shuffle)
+	if err != nil {
 		fmt.Printf("生成Excel文件时发生错误: %v\n", err)
 	} else {
-		fmt.Printf("成功生成Excel文件: %s\n", filename)
+		fmt.Printf("成功生成Excel文件!\n")
 	}
 }

@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-	"word/utils"
+	"github.com/thj8/word/utils"
 
 	"github.com/xuri/excelize/v2"
 )
@@ -20,6 +20,13 @@ type ExerciseGenerator struct {
 	SplitWordGroups [][]string      // 按每页40个单词分割的单词组
 }
 
+// GenerateOptions 定义生成Excel文件的选项
+type GenerateOptions struct {
+	ShowPos   bool // 是否显示词性
+	WordCount int  // 输出单词个数，-1表示全部
+	Shuffle   bool // 是否随机乱序
+}
+
 // NewExerciseGenerator 创建新的练习表生成器
 func NewExerciseGenerator(resourceName string, opts GenerateOptions, originalWords []string) *ExerciseGenerator {
 	generator := &ExerciseGenerator{
@@ -30,13 +37,6 @@ func NewExerciseGenerator(resourceName string, opts GenerateOptions, originalWor
 	generator.ProcessWords()         // 初始化时处理单词
 	generator.SplitWordsIntoGroups() // 初始化时分割单词
 	return generator
-}
-
-// GenerateOptions 定义生成Excel文件的选项
-type GenerateOptions struct {
-	ShowPos   bool // 是否显示词性
-	WordCount int  // 输出单词个数，-1表示全部
-	Shuffle   bool // 是否随机乱序
 }
 
 // genWordExerciseInternal 内部生成函数
@@ -230,7 +230,7 @@ func (eg *ExerciseGenerator) SplitWordsIntoGroups() {
 func (eg *ExerciseGenerator) genMultiSheetExercise(sheetNames []string, filename string) error {
 	f := excelize.NewFile()
 
-	// 遴历所有分割好的单词组并创建工作表
+	// 遍历所有分割好的单词组并创建工作表
 	currentIndex := 0
 	for i, words := range eg.SplitWordGroups {
 		sheetName := sheetNames[i]
@@ -306,8 +306,6 @@ func GenExerciseSheet(resourceName string, allWords []string, filename string, s
 	generator := NewExerciseGenerator(resourceName, opts, allWords)
 	return generator.Generate(filename)
 }
-
-
 
 // GenerateExcelFilename 根据资源名称和选项生成Excel文件名
 func GenerateExcelFilename(resourceName string, showPos bool, wordCount int, shuffle bool) string {

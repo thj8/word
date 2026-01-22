@@ -23,15 +23,30 @@ type Resources map[string][]string
 func LoadAllResources() Resources {
 	resources := make(Resources)
 	
+	// 尝试多种可能的路径
+	possiblePaths := []string{"resources", "../resources", "../../resources"}
+	
+	var resourceDir string
+	for _, path := range possiblePaths {
+		if _, err := ioutil.ReadDir(path); err == nil {
+			resourceDir = path
+			break
+		}
+	}
+	
+	if resourceDir == "" {
+		return resources
+	}
+
 	// 读取resources目录中的所有JSON文件
-	files, err := ioutil.ReadDir("resources")
+	files, err := ioutil.ReadDir(resourceDir)
 	if err != nil {
 		return resources
 	}
 
 	for _, file := range files {
 		if strings.HasSuffix(file.Name(), ".json") {
-			filePath := filepath.Join("resources", file.Name())
+			filePath := filepath.Join(resourceDir, file.Name())
 			
 			// 使用文件名（不含扩展名）作为资源名称
 			resourceName := strings.TrimSuffix(file.Name(), ".json")
