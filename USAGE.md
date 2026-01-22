@@ -5,7 +5,7 @@
 ## 安装
 
 ```bash
-go get github.com/thj8/word
+go install github.com/thj8/word@latest
 ```
 
 ## 使用方法
