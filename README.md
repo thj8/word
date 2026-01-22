@@ -1,4 +1,4 @@
-# 新概念青少版B单词默写练习Excel生成器
+# 单词默写练习Excel生成器
 
 这是一个用于生成新概念青少版B系列单词默写练习表格的Go程序，可以将词汇数据导出为格式化的Excel文件，方便教师和学生使用。
 
@@ -23,7 +23,9 @@ word/
 │   ├── file.go       # 文件操作相关工具函数
 │   └── file_test.go  # 文件操作单元测试
 ├── resources/        # 资源目录，存储所有词汇数据
-│   └── 新概念青少版B.json  # 新概念青少版B词汇资源
+│   ├── 新概念青少版B.json  # 新概念青少版B词汇资源
+│   ├── 译林三上.json     # 译林版三年级上册词汇资源
+│   └── 新概念青少版A.json  # 新概念青少版A词汇资源
 ├── tool/
 │   ├── generator.go  # Excel生成器核心实现
 │   ├── generator_test.go # 单元测试
@@ -129,17 +131,7 @@ go run main.go -resource "新概念青少版B" -show-pos=false -count=10 -shuffl
   - `NewExerciseGenerator(resourceName string, opts GenerateOptions, originalWords []string) *ExerciseGenerator` - 创建新的练习表生成器
   - `Generate(filename string) error` - 根据指定文件名生成练习表
   - `GenerateAuto() error` - 自动根据资源名称生成练习表
-  - `GenerateFilename() string` - 根据资源名称和选项生成Excel文件名
-- `GenerateOptions` - 定义生成Excel文件的选项结构体，包含以下字段：
-  - `ShowPos bool` - 是否显示词性（默认 true）
-  - `WordCount int` - 输出单词个数，-1 表示全部（默认 -1）
-  - `Shuffle bool` - 是否随机乱序（默认 false）
 - `GenExerciseSheet(resourceName string, allWords []string, filename string, shuffle bool) error` - 简化版函数（保持向后兼容），默认显示词性且输出全部单词，支持是否打乱顺序
-- `GenerateExcelFilename(resourceName string, showPos bool, wordCount int, shuffle bool) string` - 根据资源名称和选项生成Excel文件名
-- 样式相关函数：
-  - `EngColStyTop(f *excelize.File) (int, error)` - 创建英文列顶部样式，禁用自动换行
-  - `EngColStyMid(f *excelize.File) (int, error)` - 创建英文列中间样式，禁用自动换行
-  - `EngColStyBot(f *excelize.File) (int, error)` - 创建英文列底部样式，禁用自动换行
 
 ## 扩展性
 
