@@ -3,10 +3,34 @@ package tool
 import (
 	"fmt"
 	"math/rand"
+	"path/filepath"
+	"strings"
 	"time"
+	"word/utils"
 
 	"github.com/xuri/excelize/v2"
 )
+
+// ExerciseGenerator 练习表生成器结构体
+type ExerciseGenerator struct {
+	Opts            GenerateOptions // 生成选项
+	ResourceName    string          // 资源名称
+	OriginalWords   []string        // 原始单词数据
+	ProcessedWords  []string        // 处理后的单词数据（截取、打乱等）
+	SplitWordGroups [][]string      // 按每页40个单词分割的单词组
+}
+
+// NewExerciseGenerator 创建新的练习表生成器
+func NewExerciseGenerator(resourceName string, opts GenerateOptions, originalWords []string) *ExerciseGenerator {
+	generator := &ExerciseGenerator{
+		ResourceName:  resourceName,
+		Opts:          opts,
+		OriginalWords: originalWords,
+	}
+	generator.ProcessWords()         // 初始化时处理单词
+	generator.SplitWordsIntoGroups() // 初始化时分割单词
+	return generator
+}
 
 // GenerateOptions 定义生成Excel文件的选项
 type GenerateOptions struct {
@@ -15,36 +39,8 @@ type GenerateOptions struct {
 	Shuffle   bool // 是否随机乱序
 }
 
-var FullBorder = []excelize.Border{
-	{Type: "left", Color: "000000", Style: 1},
-	{Type: "right", Color: "000000", Style: 1},
-	{Type: "top", Color: "000000", Style: 1},
-	{Type: "bottom", Color: "000000", Style: 1},
-}
-
-var EnglishColumnStyleTop = []excelize.Border{
-	{Type: "left", Color: "000000", Style: 1},
-	{Type: "right", Color: "000000", Style: 1},
-	{Type: "top", Color: "000000", Style: 1},
-	{Type: "bottom", Color: "000000", Style: 3}, // 底部虚线
-}
-
-var EnglishColumnStyleMiddle = []excelize.Border{
-	{Type: "left", Color: "000000", Style: 1},
-	{Type: "right", Color: "000000", Style: 1},
-	{Type: "top", Color: "000000", Style: 3},    // 顶部虚线
-	{Type: "bottom", Color: "000000", Style: 3}, // 底部虚线
-}
-
-var EnglishColumnStyleBottom = []excelize.Border{
-	{Type: "left", Color: "000000", Style: 1},
-	{Type: "right", Color: "000000", Style: 1},
-	{Type: "top", Color: "000000", Style: 3}, // 顶部虚线
-	{Type: "bottom", Color: "000000", Style: 1},
-}
-
-// GenWordExerciseInternal 内部生成函数
-func GenWordExerciseInternal(f *excelize.File, sheet string, words []string, startIndex int, opts GenerateOptions) error {
+// genWordExerciseInternal 内部生成函数
+func (eg *ExerciseGenerator) genWordExerciseInternal(f *excelize.File, sheet string, words []string, startIndex int) error {
 	if len(words) == 0 {
 		return fmt.Errorf("单词列表不能为空")
 	}
@@ -54,12 +50,12 @@ func GenWordExerciseInternal(f *excelize.File, sheet string, words []string, sta
 	generator.SetPageSize(f, sheet)
 
 	// 创建样式
-	titleStyle, _ := generator.CreateTitleStyle(f)
-	tableHeaderStyle, _ := generator.CreateTableHeaderStyle(f)
-	cellStyle, _ := generator.CreateCellStyle(f)
-	englishColumnStyle_top, _ := generator.CreateEnglishColumnStyleTop(f)
-	englishColumnStyle_middle, _ := generator.CreateEnglishColumnStyleMiddle(f)
-	englishColumnStyle_bottom, _ := generator.CreateEnglishColumnStyleBottom(f)
+	titleStyle, _ := generator.TitleStyle(f)
+	tableHeaderStyle, _ := generator.TblHdrStyle(f)
+	cellStyle, _ := generator.CellStyle(f)
+	englishColumnStyle_top, _ := generator.EngColStyTop(f)
+	englishColumnStyle_middle, _ := generator.EngColStyMid(f)
+	englishColumnStyle_bottom, _ := generator.EngColStyBot(f)
 
 	// 写入标题
 	f.SetCellValue(sheet, "A1", "单词默写练习")
@@ -72,10 +68,10 @@ func GenWordExerciseInternal(f *excelize.File, sheet string, words []string, sta
 	f.SetCellStyle(sheet, "D1", "F1", titleStyle)
 
 	// 设置列宽
-	f.SetColWidth(sheet, "A", "A", 4.86)  // 6*0.81
+	f.SetColWidth(sheet, "A", "A", 4.86) // 6*0.81
 	f.SetColWidth(sheet, "B", "B", 16.2) // 20*0.81
 	f.SetColWidth(sheet, "C", "C", 16.2) // 20*0.81
-	f.SetColWidth(sheet, "D", "D", 4.86)  // 6*0.81
+	f.SetColWidth(sheet, "D", "D", 4.86) // 6*0.81
 	f.SetColWidth(sheet, "E", "E", 16.2) // 20*0.81
 	f.SetColWidth(sheet, "F", "F", 16.2) // 20*0.81
 
@@ -90,10 +86,10 @@ func GenWordExerciseInternal(f *excelize.File, sheet string, words []string, sta
 
 	// 计算左右两列的单词数
 	maxCount := 0
-	if len(words) % 2 == 0 {
+	if len(words)%2 == 0 {
 		maxCount = len(words) / 2
 	} else {
-		maxCount = len(words) / 2 + 1
+		maxCount = len(words)/2 + 1
 	}
 	leftCount := maxCount
 	rightCount := len(words) - leftCount
@@ -115,12 +111,12 @@ func GenWordExerciseInternal(f *excelize.File, sheet string, words []string, sta
 		// 左侧 - 如果还有单词
 		if i < leftCount {
 			f.SetCellValue(sheet, fmt.Sprintf("A%d", r), i+1+startIndex)
-			
-			// 根据opts选项决定如何显示左侧单词
+
+			// 根据Opts选项决定如何显示左侧单词
 			displayText := leftWords[i]
-			if !opts.ShowPos {
+			if !eg.Opts.ShowPos {
 				// 如果不显示pos，则尝试提取纯文本部分
-				displayText = extractTextWithoutPos(leftWords[i])
+				displayText = utils.ExtractTextWithoutPos(leftWords[i])
 			}
 			f.SetCellValue(sheet, fmt.Sprintf("B%d", r), displayText)
 			f.SetCellStyle(sheet, fmt.Sprintf("A%d", r), fmt.Sprintf("B%d", r), cellStyle)
@@ -146,12 +142,12 @@ func GenWordExerciseInternal(f *excelize.File, sheet string, words []string, sta
 		// 右侧 - 如果还有单词
 		if i < rightCount {
 			f.SetCellValue(sheet, fmt.Sprintf("D%d", r), i+leftCount+1+startIndex)
-			
-			// 根据opts选项决定如何显示右侧单词
+
+			// 根据Opts选项决定如何显示右侧单词
 			displayText := rightWords[i]
-			if !opts.ShowPos {
+			if !eg.Opts.ShowPos {
 				// 如果不显示pos，则尝试提取纯文本部分
-				displayText = extractTextWithoutPos(rightWords[i])
+				displayText = utils.ExtractTextWithoutPos(rightWords[i])
 			}
 			f.SetCellValue(sheet, fmt.Sprintf("E%d", r), displayText)
 			f.SetCellStyle(sheet, fmt.Sprintf("D%d", r), fmt.Sprintf("E%d", r), cellStyle)
@@ -178,17 +174,65 @@ func GenWordExerciseInternal(f *excelize.File, sheet string, words []string, sta
 	return nil
 }
 
-// genExerSheetWithNamesAndOptions 生成多个工作表的单词默写练习表，支持显示pos选项(内部函数，私有)
-func genExerSheetWithNamesAndOptions(datasets [][]string, sheetNames []string, filename string, showPos bool) error {
-	if len(datasets) != len(sheetNames) {
-		return fmt.Errorf("数据集数量与工作表名称数量不匹配")
+// ProcessWords 根据选项处理原始单词列表（截取、打乱等）
+func (eg *ExerciseGenerator) ProcessWords() {
+	if len(eg.OriginalWords) == 0 {
+		eg.ProcessedWords = []string{}
+		return
 	}
 
+	processedWords := make([]string, len(eg.OriginalWords))
+	copy(processedWords, eg.OriginalWords)
+
+	// 处理shuffle参数
+	if eg.Opts.Shuffle {
+		// 如果需要打乱，使用随机种子打乱单词顺序
+		rand.Seed(time.Now().UnixNano())
+		for i := len(processedWords) - 1; i > 0; i-- {
+			j := rand.Intn(i + 1)
+			processedWords[i], processedWords[j] = processedWords[j], processedWords[i]
+		}
+	}
+
+	// 处理wordCount参数
+	if eg.Opts.WordCount > 0 && eg.Opts.WordCount < len(processedWords) {
+		processedWords = processedWords[:eg.Opts.WordCount]
+	}
+
+	eg.ProcessedWords = processedWords
+}
+
+// SplitWordsIntoGroups 按每页40个单词分割单词列表
+func (eg *ExerciseGenerator) SplitWordsIntoGroups() {
+	pageSize := 40
+	if len(eg.ProcessedWords) == 0 {
+		eg.SplitWordGroups = [][]string{}
+		return
+	}
+
+	numSheets := len(eg.ProcessedWords) / pageSize
+	if len(eg.ProcessedWords)%pageSize > 0 {
+		numSheets++
+	}
+
+	eg.SplitWordGroups = make([][]string, numSheets)
+	for i := 0; i < numSheets; i++ {
+		start := i * pageSize
+		end := start + pageSize
+		if end > len(eg.ProcessedWords) {
+			end = len(eg.ProcessedWords)
+		}
+		eg.SplitWordGroups[i] = eg.ProcessedWords[start:end]
+	}
+}
+
+// genMultiSheetExercise 生成多个工作表的单词默写练习表，支持显示pos选项(内部函数，私有)
+func (eg *ExerciseGenerator) genMultiSheetExercise(sheetNames []string, filename string) error {
 	f := excelize.NewFile()
 
-	// 遍历所有数据集并创建工作表
+	// 遴历所有分割好的单词组并创建工作表
 	currentIndex := 0
-	for i, words := range datasets {
+	for i, words := range eg.SplitWordGroups {
 		sheetName := sheetNames[i]
 
 		// 对于第一个工作表，重命名默认工作表而不是创建新的
@@ -204,11 +248,7 @@ func genExerSheetWithNamesAndOptions(datasets [][]string, sheetNames []string, f
 			continue // 跳过空数据集
 		}
 
-		// 使用当前索引作为起始序号
-		opts := GenerateOptions{
-			ShowPos: showPos,
-		}
-		err := GenWordExerciseInternal(f, sheetName, words, currentIndex, opts)
+		err := eg.genWordExerciseInternal(f, sheetName, words, currentIndex)
 		if err != nil {
 			return err
 		}
@@ -220,83 +260,67 @@ func genExerSheetWithNamesAndOptions(datasets [][]string, sheetNames []string, f
 	return f.SaveAs(filename)
 }
 
-// GenerateExerciseSheet 统一的对外函数，使用Option结构体传参
-func GenerateExerciseSheet(allWords []string, filename string, opts GenerateOptions) error {
-	if len(allWords) == 0 {
+// GenerateFilename 根据资源名称和选项生成Excel文件名
+func (eg *ExerciseGenerator) GenerateFilename() string {
+	return GenerateExcelFilename(eg.ResourceName, eg.Opts.ShowPos, eg.Opts.WordCount, eg.Opts.Shuffle)
+}
+
+// Generate 生成练习表
+func (eg *ExerciseGenerator) Generate(filename string) error {
+	if len(eg.OriginalWords) == 0 {
 		return fmt.Errorf("单词列表不能为空")
 	}
 
-	// 处理shuffle参数
-	processedWords := make([]string, len(allWords))
-	copy(processedWords, allWords)
-	if opts.Shuffle {
-		// 如果需要打乱，使用随机种子打乱单词顺序
-		rand.Seed(time.Now().UnixNano())
-		for i := len(processedWords) - 1; i > 0; i-- {
-			j := rand.Intn(i + 1)
-			processedWords[i], processedWords[j] = processedWords[j], processedWords[i]
-		}
-	}
-
-	// 处理wordCount参数
-	if opts.WordCount > 0 && opts.WordCount < len(processedWords) {
-		processedWords = processedWords[:opts.WordCount]
-	}
-
-	// 计算需要多少个工作表（每表最多40个单词）
-	pageSize := 40
-	numSheets := len(processedWords) / pageSize
-	if len(processedWords)%pageSize > 0 {
-		numSheets++
-	}
-
-	// 分割单词列表
-	datasets := make([][]string, numSheets)
-	for i := 0; i < numSheets; i++ {
-		start := i * pageSize
-		end := start + pageSize
-		if end > len(processedWords) {
-			end = len(processedWords)
-		}
-		datasets[i] = processedWords[start:end]
+	// 如果没有提供文件名，则自动生成
+	if filename == "" {
+		filename = eg.GenerateFilename()
 	}
 
 	// 生成工作表名称
-	sheetNames := make([]string, numSheets)
-	for i := 0; i < numSheets; i++ {
-		if numSheets == 1 {
+	sheetNames := make([]string, len(eg.SplitWordGroups))
+	for i := 0; i < len(eg.SplitWordGroups); i++ {
+		if len(eg.SplitWordGroups) == 1 {
 			sheetNames[i] = "Sheet1"
 		} else {
 			sheetNames[i] = fmt.Sprintf("Page%d", i+1)
 		}
 	}
 
-	return genExerSheetWithNamesAndOptions(datasets, sheetNames, filename, opts.ShowPos)
+	return eg.genMultiSheetExercise(sheetNames, filename)
+}
+
+// GenerateAuto 自动根据资源名称生成练习表
+func (eg *ExerciseGenerator) GenerateAuto() error {
+	filename := eg.GenerateFilename()
+	return eg.Generate(filename)
 }
 
 // GenExerciseSheet 生成单词默写练习表（保持向后兼容，默认显示pos）
-func GenExerciseSheet(allWords []string, filename string, shuffle bool) error {
+func GenExerciseSheet(resourceName string, allWords []string, filename string, shuffle bool) error {
 	opts := GenerateOptions{
 		ShowPos:   true,
 		WordCount: -1,
 		Shuffle:   shuffle,
 	}
-	
-	return GenerateExerciseSheet(allWords, filename, opts)
+
+	generator := NewExerciseGenerator(resourceName, opts, allWords)
+	return generator.Generate(filename)
 }
 
-// extractTextWithoutPos 从单词字符串中提取不包含pos的部分
-func extractTextWithoutPos(word string) string {
-	// 查找第一个点的位置，通常是pos和text之间的分隔符
-	for i, char := range word {
-		if char == '.' {
-			// 返回点之后的部分（即text部分）
-			if i+1 < len(word) {
-				return word[i+1:]
-			}
-			break
-		}
+
+
+// GenerateExcelFilename 根据资源名称和选项生成Excel文件名
+func GenerateExcelFilename(resourceName string, showPos bool, wordCount int, shuffle bool) string {
+	cleanResourceName := utils.CleanFileName(resourceName)
+	filenameParts := []string{cleanResourceName}
+	if !showPos {
+		filenameParts = append(filenameParts, "no_pos")
 	}
-	// 如果没有找到点，则返回原字符串
-	return word
+	if wordCount > 0 {
+		filenameParts = append(filenameParts, fmt.Sprintf("%dwords", wordCount))
+	}
+	if shuffle {
+		filenameParts = append(filenameParts, "shuffle")
+	}
+	return filepath.Join("excel", fmt.Sprintf("%s.xlsx", strings.Join(filenameParts, "_")))
 }

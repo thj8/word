@@ -84,6 +84,33 @@ go run main.go -resource "新概念青少版B" -show-pos=false -count=10 -shuffl
 
 程序会自动加载`resources`目录中的所有JSON文件，文件名（不含扩展名）作为资源名称。
 
+### JSON格式规范
+
+资源文件必须遵循以下格式规范：
+
+- 文件必须是有效的JSON格式
+- 文件内容是一个数组，包含多个词汇对象
+- 每个词汇对象必须包含以下字段：
+  - `pos`: 词性（part of speech），如 "n."（名词）、"v."（动词）等
+  - `text`: 词汇的具体含义或中文释义
+
+### 词性（POS）属性详解
+
+| 词性缩写 | 说明 | 示例 |
+|---------|------|------|
+| `n.` | 名词 (noun)：表示人、事物、地点或抽象概念的名称 | 学生、桌子、北京 |
+| `v.` | 动词 (verb)：表示动作或状态 | 跑、学习、是 |
+| `adj.` | 形容词 (adjective)：修饰名词或代词，描述人或事物的特征 | 美丽的、高的、聪明的 |
+| `adv.` | 副词 (adverb)：修饰动词、形容词或其他副词 | 快速地、非常、很 |
+| `pron.` | 代词 (pronoun)：代替名词或名词短语 | 我、你、他们 |
+| `prep.` | 介词 (preposition)：表示名词或代词与其他词的关系 | 在、关于、为了 |
+| `conj.` | 连词 (conjunction)：连接词、短语或句子 | 和、但是、或者 |
+| `int.` | 感叹词 (interjection)：表达情感或感叹 | 哎呀、哦、哈哈 |
+| `det.` | 限定词 (determiner)：限定名词的意义范围 | 这、那、一些 |
+| `phr.` | 短语 (phrase)：固定搭配或常用语句 | 早上好、生日快乐 |
+| `art.` | 冠词 (article)：用在名词前帮助说明名词的含义 | 一个、这个 |
+| `num.` | 数词 (numeral)：表示数量或顺序 | 一、第一、许多 |
+
 ## Excel表格格式
 
 生成的Excel文件包含以下元素：
@@ -96,10 +123,23 @@ go run main.go -resource "新概念青少版B" -show-pos=false -count=10 -shuffl
 
 ## API说明
 
-工具包提供了两个函数：
+工具包提供了以下主要函数和结构体：
 
-- `GenExerciseSheet(allWords []string, filename string, shuffle bool)` - 简化版函数，自动按每页40个单词分割数据并生成工作表，支持是否打乱顺序
-- `GenExerSheetWithNames(datasets [][]string, sheetNames []string, filename string)` - 完整版函数，支持自定义数据分割和工作表名称
+- `ExerciseGenerator` - 练习表生成器结构体，封装了所有生成逻辑
+  - `NewExerciseGenerator(resourceName string, opts GenerateOptions, originalWords []string) *ExerciseGenerator` - 创建新的练习表生成器
+  - `Generate(filename string) error` - 根据指定文件名生成练习表
+  - `GenerateAuto() error` - 自动根据资源名称生成练习表
+  - `GenerateFilename() string` - 根据资源名称和选项生成Excel文件名
+- `GenerateOptions` - 定义生成Excel文件的选项结构体，包含以下字段：
+  - `ShowPos bool` - 是否显示词性（默认 true）
+  - `WordCount int` - 输出单词个数，-1 表示全部（默认 -1）
+  - `Shuffle bool` - 是否随机乱序（默认 false）
+- `GenExerciseSheet(resourceName string, allWords []string, filename string, shuffle bool) error` - 简化版函数（保持向后兼容），默认显示词性且输出全部单词，支持是否打乱顺序
+- `GenerateExcelFilename(resourceName string, showPos bool, wordCount int, shuffle bool) string` - 根据资源名称和选项生成Excel文件名
+- 样式相关函数：
+  - `EngColStyTop(f *excelize.File) (int, error)` - 创建英文列顶部样式，禁用自动换行
+  - `EngColStyMid(f *excelize.File) (int, error)` - 创建英文列中间样式，禁用自动换行
+  - `EngColStyBot(f *excelize.File) (int, error)` - 创建英文列底部样式，禁用自动换行
 
 ## 扩展性
 

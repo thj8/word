@@ -104,3 +104,19 @@ func ConvertRawWordsToStrings(rawWords []interface{}) []string {
 	
 	return words
 }
+
+// ExtractTextWithoutPos 从单词字符串中提取不包含pos的部分
+func ExtractTextWithoutPos(word string) string {
+	// 查找第一个点的位置，通常是pos和text之间的分隔符
+	for i, char := range word {
+		if char == '.' {
+			// 返回点之后的部分（即text部分）
+			if i+1 < len(word) {
+				return word[i+1:]
+			}
+			break
+		}
+	}
+	// 如果没有找到点，则返回原字符串
+	return word
+}

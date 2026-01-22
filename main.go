@@ -4,8 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"word/tool"
 	"word/utils"
@@ -53,21 +51,6 @@ func main() {
 		return
 	}
 
-	// 如果指定了单词数量，截取相应数量的单词
-	if *wordCount > 0 && *wordCount < len(words) {
-		if *shuffle {
-			// 如果需要打乱顺序，在截取前先打乱整个列表
-			words = utils.ShuffleWords(words)
-		}
-		// 截取指定数量的单词
-		if *wordCount < len(words) {
-			words = words[:*wordCount]
-		}
-	} else if *shuffle {
-		// 如果不需要截断但需要打乱
-		words = utils.ShuffleWords(words)
-	}
-
 	// 创建excel目录
 	excelDir := "excel"
 	if _, err := os.Stat(excelDir); os.IsNotExist(err) {
@@ -78,32 +61,14 @@ func main() {
 		}
 	}
 
-	// 定义数据集
-	allWordsList := words
-
-	// 清理资源名称，去除不适合作为文件名的字符
-	cleanResourceName := utils.CleanFileName(resourceNameValue)
-
-	// 添加参数信息到文件名
-	filenameParts := []string{cleanResourceName}
-	if !*showPos {
-		filenameParts = append(filenameParts, "no_pos")
-	}
-	if *wordCount > 0 {
-		filenameParts = append(filenameParts, fmt.Sprintf("%dwords", *wordCount))
-	}
-	if *shuffle {
-		filenameParts = append(filenameParts, "shuffle")
-	}
-
-	filename := filepath.Join(excelDir, fmt.Sprintf("%s.xlsx", strings.Join(filenameParts, "_")))
-
 	opts := tool.GenerateOptions{
 		ShowPos:   *showPos,
 		WordCount: *wordCount,
 		Shuffle:   *shuffle,
 	}
-	if err := tool.GenerateExerciseSheet(allWordsList, filename, opts); err != nil {
+	generator := tool.NewExerciseGenerator(resourceNameValue, opts, words)
+	filename := generator.GenerateFilename()
+	if err := generator.GenerateAuto(); err != nil {
 		fmt.Printf("生成Excel文件时发生错误: %v\n", err)
 	} else {
 		fmt.Printf("成功生成Excel文件: %s\n", filename)

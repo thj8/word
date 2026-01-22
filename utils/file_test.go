@@ -1,6 +1,8 @@
 package utils
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestCleanFileName(t *testing.T) {
 	tests := []struct {

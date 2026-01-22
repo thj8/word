@@ -1,6 +1,8 @@
 package utils
 
-import "strings"
+import (
+	"strings"
+)
 
 // CleanFileName 清理文件名，去除不适合作为文件名的字符
 func CleanFileName(name string) string {

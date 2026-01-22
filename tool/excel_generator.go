@@ -35,8 +35,8 @@ func (eg *ExcelGenerator) SetPageSize(f *excelize.File, sheet string) {
 	})
 }
 
-// CreateTitleStyle 创建标题样式
-func (eg *ExcelGenerator) CreateTitleStyle(f *excelize.File) (int, error) {
+// TitleStyle 创建标题样式
+func (eg *ExcelGenerator) TitleStyle(f *excelize.File) (int, error) {
 	style := &excelize.Style{
 		Font: &excelize.Font{
 			Bold: false,
@@ -50,23 +50,8 @@ func (eg *ExcelGenerator) CreateTitleStyle(f *excelize.File) (int, error) {
 	return f.NewStyle(style)
 }
 
-// CreateDateStyle 创建日期样式
-func (eg *ExcelGenerator) CreateDateStyle(f *excelize.File) (int, error) {
-	style := &excelize.Style{
-		Font: &excelize.Font{
-			Bold: true,
-			Size: 12,
-		},
-		Alignment: &excelize.Alignment{
-			Horizontal: "left",
-			Vertical:   "center",
-		},
-	}
-	return f.NewStyle(style)
-}
-
-// CreateTableHeaderStyle 创建表头样式
-func (eg *ExcelGenerator) CreateTableHeaderStyle(f *excelize.File) (int, error) {
+// TblHdrStyle 创建表头样式
+func (eg *ExcelGenerator) TblHdrStyle(f *excelize.File) (int, error) {
 	style := &excelize.Style{
 		Font: &excelize.Font{
 			Bold: true,
@@ -91,12 +76,13 @@ func (eg *ExcelGenerator) CreateTableHeaderStyle(f *excelize.File) (int, error) 
 	return f.NewStyle(style)
 }
 
-// CreateCellStyle 创建单元格样式
-func (eg *ExcelGenerator) CreateCellStyle(f *excelize.File) (int, error) {
+// CellStyle 创建单元格样式
+func (eg *ExcelGenerator) CellStyle(f *excelize.File) (int, error) {
 	style := &excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal: "center",
 			Vertical:   "center",
+			WrapText:   true, // 启用自动换行
 		},
 		Border: []excelize.Border{
 			{Type: "left", Color: "000000", Style: 1},
@@ -108,12 +94,13 @@ func (eg *ExcelGenerator) CreateCellStyle(f *excelize.File) (int, error) {
 	return f.NewStyle(style)
 }
 
-// CreateEnglishColumnStyleTop 创建英文列顶部样式
-func (eg *ExcelGenerator) CreateEnglishColumnStyleTop(f *excelize.File) (int, error) {
+// EngColStyTop 创建英文列顶部样式
+func (eg *ExcelGenerator) EngColStyTop(f *excelize.File) (int, error) {
 	style := &excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal: "center",
 			Vertical:   "center",
+			WrapText:   false, // 禁用自动换行
 		},
 		Border: []excelize.Border{
 			{Type: "left", Color: "000000", Style: 1},
@@ -125,12 +112,13 @@ func (eg *ExcelGenerator) CreateEnglishColumnStyleTop(f *excelize.File) (int, er
 	return f.NewStyle(style)
 }
 
-// CreateEnglishColumnStyleMiddle 创建英文列中间样式
-func (eg *ExcelGenerator) CreateEnglishColumnStyleMiddle(f *excelize.File) (int, error) {
+// EngColStyMid 创建英文列中间样式
+func (eg *ExcelGenerator) EngColStyMid(f *excelize.File) (int, error) {
 	style := &excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal: "center",
 			Vertical:   "center",
+			WrapText:   false, // 禁用自动换行
 		},
 		Border: []excelize.Border{
 			{Type: "left", Color: "000000", Style: 1},
@@ -142,12 +130,13 @@ func (eg *ExcelGenerator) CreateEnglishColumnStyleMiddle(f *excelize.File) (int,
 	return f.NewStyle(style)
 }
 
-// CreateEnglishColumnStyleBottom 创建英文列底部样式
-func (eg *ExcelGenerator) CreateEnglishColumnStyleBottom(f *excelize.File) (int, error) {
+// EngColStyBot 创建英文列底部样式
+func (eg *ExcelGenerator) EngColStyBot(f *excelize.File) (int, error) {
 	style := &excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal: "center",
 			Vertical:   "center",
+			WrapText:   false, // 禁用自动换行
 		},
 		Border: []excelize.Border{
 			{Type: "left", Color: "000000", Style: 1},
