@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
 	"github.com/thj8/word/utils"
 
 	"github.com/xuri/excelize/v2"
@@ -58,7 +59,8 @@ func (eg *ExerciseGenerator) genWordExerciseInternal(f *excelize.File, sheet str
 	englishColumnStyle_bottom, _ := generator.EngColStyBot(f)
 
 	// 写入标题
-	f.SetCellValue(sheet, "A1", "单词默写练习")
+	title := fmt.Sprintf("%s - %s - 默写", eg.ResourceName, sheet)
+	f.SetCellValue(sheet, "A1", title)
 	f.MergeCell(sheet, "A1", "C1")
 	f.SetCellStyle(sheet, "A1", "C1", titleStyle)
 
