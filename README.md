@@ -9,6 +9,7 @@ go get github.com/thj8/word
 ```
 
 ## 作为库使用
+感谢大家使用
 
 ### 基本使用
 
