@@ -93,7 +93,7 @@ word/
 
 lib 文件夹包含库的公共接口，使得这个项目可以作为库被其他项目导入使用：
 
-- **公共接口封装**：提供简单易用的 API，如 [GenerateExerciseSheet](file:///Users/sugar/Desktop/stu/word/lib/lib.go#L11-L43) 和 [GetAvailableResources](file:///Users/sugar/Desktop/stu/word/lib/lib.go#L46-L53)
+- **公共接口封装**：提供简单易用的 API，如 [GenerateExerciseSheet](./lib/lib.go#L11-L43) 和 [GetAvailableResources](./lib/lib.go#L46-L53)
 - **内部实现隐藏**：隐藏复杂的内部逻辑，只暴露必要的功能给使用者
 - **库与工具分离**：允许同一套代码既可以作为命令行工具使用，也可以作为库导入到其他项目中
 
